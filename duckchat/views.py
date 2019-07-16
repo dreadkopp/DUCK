@@ -1,0 +1,59 @@
+from django.contrib.auth import get_user_model
+from django.forms.models import model_to_dict
+from django.http import HttpResponse
+from django.http import JsonResponse
+from django.template import loader
+from duckchat.models import ChatRoom, Message
+from duckchat.services.UserService import UserService
+
+
+def landingpage(request, room_id=None, passwd=None):
+    template = loader.get_template("Main.html")
+    if not room_id:
+        room_id = 1
+    chatroom = ChatRoom.objects.get(pk=room_id)
+    if chatroom.type == 2:  # 2 is Private
+        if passwd != chatroom.password:
+            return HttpResponse('Du brauchst das korrekte Passwort, um diesem Chatroom beizutreten')
+    messages = Message.objects.filter(room=room_id)
+    users = UserService.get_current_users()
+    available_rooms = ChatRoom.objects.all()
+
+    context = {
+        'room': chatroom,
+        'messages': messages,
+        'users': users,
+        'available_rooms': available_rooms
+    }
+    returndata = template.render(context, request)
+    return HttpResponse(returndata)
+
+
+def acceptMessage(request):
+    # check if request is send as POST
+    if request.method != 'POST':
+        return HttpResponse('Kann Nachrichten nur per Post empfangen')
+
+    # create new Message and store it to DB
+    message = Message()
+    message.sender = request.user
+    message.message = request.POST.get('Message')
+    room_id = request.POST.get('roomid')
+    message.room = ChatRoom.objects.get(pk=room_id)
+    message.save()
+
+    # get some user info for display
+    name = request.user.nickname
+    if not name:
+        name = request.user.username
+    image = request.user.icon
+    if not image:
+        image = 'user_icons/no-img.png'
+    else:
+        image = image.url
+
+    return JsonResponse({'message': model_to_dict(message),
+                         'sender': name,
+                         'sender_image': image,
+                         'time': message.timestamp.strftime("%d.%m %H:%M")
+                         }, safe=False)

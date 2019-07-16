@@ -1,0 +1,120 @@
+<h2>{{ room.name }}</h2>
+
+<div id="loginbox">
+    {% if user.is_authenticated %}
+    Hi {{ user.username }}!
+    <p><a href="{% url 'logout' %}">logout</a></p>
+    {% else %}
+    <p>You are not logged in</p>
+    <a href="{% url 'login' %}">login</a>
+    {% endif %}
+</div>
+
+<div id="usersbox">
+    Online:
+    {% for user in users %}
+    <p>{{user.username}}</p>
+    {% endfor %}
+</div>
+
+<div id="chatroombox">
+    <select class="fa-select" id="roomselect">
+        {% for chatroom in available_rooms %}
+        <option value="{{chatroom.id}}" data-type=
+                {% if chatroom.type == 2 %}
+                    "private"> &#xf023;
+                {% else %}
+                    "public">
+                {% endif %}
+            {{chatroom.name}}
+        </option>
+        {% endfor %}
+    </select>
+    <input style="display:none" id="password" placeholder="Passwort"/>
+    <button id="confirm_roomchange">Chatroom wechseln</button>
+</div>
+
+<div id="messages">
+    {% for msg in messages %}
+    <div class="messagebox">
+        <p>{{ msg.message }}</p>
+        {% if msg.sender.nickname %}
+        <p>
+            <small>{{ msg.sender.nickname }} - {{ msg.timestamp|date:'d.m H:i' }}</small>
+        </p>
+        {% else %}
+        <p>
+            <small>{{ msg.sender.username }} - {{ msg.timestamp|date:'d.m H:i' }}</small>
+        </p>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<textarea id="chat-input"></textarea>
+
+<button id="submit">
+   <i class="fas fa-dove"></i> Absenden
+</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+
+<style>
+    .fa-select {
+        font-family: 'sans-serif', 'Font Awesome 5 Free';
+        font-weight: 900;
+    }
+</style>
+
+<script>
+
+    $('#roomselect').on('change', function(e) {
+
+        if ($('#roomselect option:selected').data('type') == 'private' ) {
+            $('#password').show();
+        } else {
+             $('#password').val('').hide();
+        }
+    });
+
+     $('#confirm_roomchange').on('click', function(e) {
+        var room_id = $('#roomselect').val();
+        var url = '/'+room_id;
+        var password = $('#password').val();
+        if (password != '') {
+            url = url + '/' + password;
+        }
+        window.location.href = url;
+    });
+
+    $('#submit').on('click', function(e) {
+
+        var Nachricht = $('#chat-input').val();
+        if(Nachricht=='') return;
+        $('#chat-input').val('');
+        var roomid = {{ room.id }};
+
+        var savedata = {
+            'Message':Nachricht,
+            'roomid':roomid,
+            'csrfmiddlewaretoken': "{{ csrf_token }}"
+        }
+
+        $.post('acceptMessage/',savedata, function(data){
+            var to_post = data.message.message;
+            var paragraph = $('<p/>').html(to_post);
+            var username = data.sender;
+            var image = data.sender_image;
+            var timestamp = data.time;
+            var userinfo = $('<small>').html(username + ' -- ' + data.time);
+            var messagesection = $('<div/>').addClass('messagebox').append(paragraph).append(userinfo);
+            $('#messages').append(messagesection);
+        })
+
+    });
+
+
+
+</script>
