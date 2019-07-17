@@ -21,10 +21,13 @@ from duckchat.models.CB_Views.SignUpView import SignUpView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
     path('', views.landingpage),
     path('<int:room_id>', views.landingpage),
     path('<int:room_id>/<slug:passwd>', views.landingpage),
+
     path('accounts/', include('django.contrib.auth.urls')),
     path('accounts/signup/', SignUpView.as_view(), name='signup'),
-    path('acceptMessage/', views.acceptMessage, name='acceptMessage')
+    path('acceptMessage/', views.acceptMessage, name='acceptMessage'),
+    path('pollMessages/', views.getMessages, name='getMessage'),
 ]
