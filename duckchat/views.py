@@ -48,7 +48,7 @@ def getMessages(request):
     messages = Message.objects.filter(room=room_id).filter(pk__gt=lastmessageID)
     prettymessages = []
     for message in messages:
-        prettymessage = prettifyMessages(user, message)
+        prettymessage = prettifyMessages(message.sender, message)
         prettymessages.append(prettymessage)
 
     return JsonResponse(prettymessages, safe=False)
@@ -76,10 +76,6 @@ def acceptMessage(request):
         image = 'user_icons/no-img.png'
     else:
         image = image.url
-
-
-    # statt message soll sammlung as messages zurückgegeben werden, wie beim poll
-    # lastmessageID steht in POST
 
     data = []
     lastID = request.POST.get('lastmessageID', 1)

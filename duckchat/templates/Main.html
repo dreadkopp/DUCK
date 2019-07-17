@@ -1,101 +1,126 @@
 <div class="row h-100">
     <nav class="navbar navbar-expand-lg navbar-dark col-12 ml-3 mr-0 position-fixed">
-<div class="row">
-    <div class="col-12">
-<h2 class="navbar-brand float-left">{{ room.name }}</h2>
-        <div class="collapse navbar-collapse" id="navbarNavDropdown">
-            <ul class="navbar-nav">
-                <li class="nav-item dropdown">
+        <div class="row">
+            <div class="col-12">
+                <h2 class="navbar-brand float-left">{{ room.name }}</h2>
+                <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                    <ul class="navbar-nav">
+                        <li class="nav-item dropdown">
 
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          {% if user.is_authenticated %}
-    Hi {{ user.username }}!
-    {% else %}
-    You are not logged in
-                {% endif %}
-        </a>
-        <div class="dropdown-menu float-right" aria-labelledby="navbarDropdownMenuLink">
-                {% if user.is_authenticated %}
-    <a class="dropdown-item" href="{% url 'logout' %}">logout</a>
-    {% else %}
-    <a class="dropdown-item" href="{% url 'login' %}">login</a>
-    {% endif %}
-        </div>
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                {% if user.is_authenticated %}
+                                Hi {{ user.username }}!
+                                {% else %}
+                                Du bist nicht eingeloggt
+                                {% endif %}
+                            </a>
+                            <div class="dropdown-menu float-right" aria-labelledby="navbarDropdownMenuLink">
+                                {% if user.is_authenticated %}
+                                <a class="dropdown-item" href="{% url 'logout' %}">logout</a>
+                                {% else %}
+                                <a class="dropdown-item" href="{% url 'login' %}">login</a>
+                                {% endif %}
+                            </div>
 
 
-                </li>
-            </ul>
-        </div>
+                        </li>
+                    </ul>
+                </div>
 
-</div>
-</div>
-
-</nav>
-
-<div class="col-8" id="chat-content">
-    <div class="row">
-<div id="messages" class="col-12 ml-3">
-
-    {% for msg in messages %}
-    <div class="messagebox card w-75 mb-3 text-warning bg-dark{% if msg.sender.id == user.id %} text-right text-light float-right{% endif %}">
-        <div class="card-body">
-        <p class="card-text">{{ msg.message }}</p>
-            <p class=" card-subtitle">
-        {% if msg.sender.nickname %}
-
-            <small class="badge badge-pill badge-primary">{{ msg.sender.nickname }} - {{ msg.timestamp|date:'d.m H:i' }}</small>
-
-        {% else %}
-
-            <small class="badge badge-pill badge-primary">{{ msg.sender.username }} - {{ msg.timestamp|date:'d.m H:i' }}</small>
-
-        {% endif %}
-            </p>
             </div>
-    </div>
-    {% endfor %}
-</div>
-        <div class="col-8 fixed-bottom">
-            <div class="d-flex">
-           <input class="flex-fill" type="text" id="chat-input">
-            <button class="btn btn-secondary" id="submit">
-            <i class="fas fa-dove"></i> Absenden</button>
-</div>
         </div>
-</div>
 
-</div>
-   <div class="col-4" id="chat-info">
-       <div id="chatroombox">
-    <select class="fa-select" id="roomselect">
-        {% for chatroom in available_rooms %}
-        <option value="{{chatroom.id}}" data-type=
-                {% if chatroom.type == 2 %}
-                    "private"> &#xf023;
+    </nav>
+
+    <div class="col-10" id="chat-content">
+        <div class="row">
+            <div id="messages" class="col-12 ml-3">
+
+                {% for msg in messages %}
+                <div class="messagebox card w-75 mb-3 text-warning bg-dark{% if msg.sender.id == user.id %} text-right text-light float-right{% endif %}">
+                    <div class="card-body">
+                        <p class="card-text">{{ msg.message }}</p>
+                        <p class=" card-subtitle">
+                            {% if msg.sender.nickname %}
+
+                            <small class="badge badge-pill badge-primary">{{ msg.sender.nickname }} - {{ msg.timestamp|date:'d.m H:i' }}
+                            </small>
+
+                            {% else %}
+
+                            <small class="badge badge-pill badge-primary">{{ msg.sender.username }} - {{ msg.timestamp|date:'d.m H:i' }}
+                            </small>
+
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% if user.is_authenticated %}
+            <div class="col-10 pr-0 fixed-bottom">
+                <div class="input-group">
+                    <input class="form-control" type="text" id="chat-input">
+                    <div class="input-group-append">
+                        <button class="btn btn-secondary" type="button" id="submit"><i class="fas fa-dove"></i> Absenden
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+    <div class="col-2" id="chat-info">
+        <div id="chatroombox">
+            <h4>Verfügbare Chatrooms:</h4>
+            <select class="fa-select form-control" id="roomselect">
+                {% for chatroom in available_rooms %}
+                <option value="{{chatroom.id}}" data-type=
+                        {% if chatroom.type == 2 %}
+                "private"> &#xf023;
                 {% else %}
-                    "public">
+                "public">
                 {% endif %}
-            {{chatroom.name}}
-        </option>
-        {% endfor %}
-    </select>
-    <input style="display:none" id="password" placeholder="Passwort"/>
-    <button id="confirm_roomchange">Chatroom wechseln</button>
-           <div id="usersbox">
-    Online:
-    {% for user in users %}
-    <p>{{user.username}}</p>
-    {% endfor %}
-</div>
-</div>
+                {{chatroom.name}}
+                </option>
+                {% endfor %}
+            </select>
+            <div class="input-group">
+                <input class="form-control" style="display:none" type="text" id="password" placeholder="Passwort">
+                <div class="input-group-append">
+                    <button class="btn btn-secondary" type="button" id="confirm_roomchange"><i
+                            class="fas fa-arrow-alt-circle-right"></i> Chatroom wechseln
+                    </button>
+                </div>
 
-   </div>
+            </div>
+
+            <div id="usersbox" class="mt-5">
+                <h4>Users Online:</h4>
+                {% for user in users %}
+                <p>{{user.username}}</p>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"
+        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css"
+      integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 
 
 <style>
@@ -121,6 +146,7 @@
     #chat-info{
         margin-top: 64px
     }
+
 </style>
 
 <script>
@@ -141,6 +167,12 @@
         });
     }
 
+    $('#chat-input').on("keyup", function(e) {
+        if (e.keyCode == 13) {
+            $('#submit').click();
+        }
+    });
+
     function renderMessage(data) {
             lastMessageID = data.message.id;
             var to_post = data.message.message;
@@ -148,7 +180,7 @@
             var username = data.sender;
             var image = data.sender_image;
             var timestamp = data.time;
-            var userinfobadge = $('<small>').addClass('badge badge-pill badge-primary').html(username + ' -- ' + data.time);
+            var userinfobadge = $('<small>').addClass('badge badge-pill badge-primary').html(username + ' - ' + data.time);
             var userinfo = $('<p>').addClass('card-subline').append(userinfobadge);
             var subsection = $('<div>').addClass('card-body').append(paragraph).append(userinfo);
             var messagesection = $('<div>').addClass('messagebox card w-75 mb-3 text-warning bg-dark');
@@ -203,6 +235,7 @@
         });
 
     });
+
 
 
 
