@@ -16,6 +16,8 @@ def landingpage(request, room_id=None, passwd=None):
         if passwd != chatroom.password:
             return HttpResponse('Du brauchst das korrekte Passwort, um diesem Chatroom beizutreten')
     messages = Message.objects.filter(room=room_id)
+    lastMessage = messages.last()
+    lastMessageID = lastMessage.id
     users = UserService.get_current_users()
     available_rooms = ChatRoom.objects.all()
 
@@ -23,10 +25,33 @@ def landingpage(request, room_id=None, passwd=None):
         'room': chatroom,
         'messages': messages,
         'users': users,
-        'available_rooms': available_rooms
+        'available_rooms': available_rooms,
+        'password': passwd,
+        'lastMessageID': lastMessageID
     }
     returndata = template.render(context, request)
     return HttpResponse(returndata)
+
+def getMessages(request):
+    # check if request is send as POST
+    if request.method != 'GET':
+        return HttpResponse('Kann Nachrichten nur per GET empfangen')
+    room_id = request.GET.get('room_id',1)
+    passwd = request.GET.get('passwd','')
+    user = request.user
+    lastmessageID = request.GET.get('lastmessageID',1)
+
+    chatroom = ChatRoom.objects.get(pk=room_id)
+    if chatroom.type == 2:  # 2 is Private
+        if passwd != chatroom.password:
+            return HttpResponse('Du brauchst das korrekte Passwort, um diesem Chatroom beizutreten')
+    messages = Message.objects.filter(room=room_id).filter(pk__gt=lastmessageID)
+    prettymessages = []
+    for message in messages:
+        prettymessage = prettifyMessages(message.sender, message)
+        prettymessages.append(prettymessage)
+
+    return JsonResponse(prettymessages, safe=False)
 
 
 def acceptMessage(request):
@@ -52,8 +77,31 @@ def acceptMessage(request):
     else:
         image = image.url
 
-    return JsonResponse({'message': model_to_dict(message),
-                         'sender': name,
-                         'sender_image': image,
-                         'time': message.timestamp.strftime("%d.%m %H:%M")
-                         }, safe=False)
+    data = []
+    lastID = request.POST.get('lastmessageID', 1)
+    messages = Message.objects.filter(room=room_id).filter(pk__gt=lastID)
+
+    for message in messages:
+        prettymessage = prettifyMessages(message.sender, message)
+        data.append(prettymessage)
+
+    # data = prettifyMessages(request.user, message)
+
+    return JsonResponse(data, safe=False)
+
+
+def prettifyMessages(user, message):
+    name = user.nickname
+    if not name:
+        name = user.username
+    image = user.icon
+    if not image:
+        image = 'user_icons/no-img.png'
+    else:
+        image = image.url
+    return {'message': model_to_dict(message),
+             'sender': name,
+             'sender_image': image,
+             'time': message.timestamp.strftime("%d.%m %H:%M"),
+             'user_id': user.id
+             }
